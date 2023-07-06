@@ -9,14 +9,14 @@ This project showcases a data visualization that presents the honey production, 
 1. Which states in the United States have the highest honey production?
 By interacting with the visualization and selecting a specific year, users can identify the states that contribute the most to honey production. The visualization highlights the top-producing states, enabling a comparison of their production levels.
 
-2. How has honey production changed over the years for different states?
+2. How has honey production changed over the years for different states? Are there any states experiencing a decline in honey production?
 The visualization allows users to observe the changes in honey production across different states over time. By selecting different years, users can gain insights into the trends and patterns of honey production in specific states, identifying whether there have been significant fluctuations or consistent growth.
 
-3. Are there any states experiencing a decline in honey production?
-By examining the map visualization for different years, users can identify states that may be experiencing a decline in honey production. Comparing the production levels across years helps in understanding whether certain states are facing challenges in maintaining their honey production or if there are factors contributing to the decline.
+3. Which states have the highest yield per honey bee colony?
+By analyzing the visualization and selecting a specific year, users can identify the states that have the highest yield per honey bee colony. This information provides insights into the productivity and efficiency of honey production in different states.
 
-4. Which states have a high demand for honey?
-The visualization provides an opportunity to explore the demand for honey across different states. By selecting a specific year, users can observe which states have a relatively higher demand for honey based on the dollar value.
+4. How does the average price of honey vary across states? What is the total value of honey production in different states?
+By selecting a specific year, users can explore the average price of honey and the total value of honey production in different states. This information provides insights into the economic significance of honey production in various regions and can be useful for understanding market dynamics.
 
 ## Features
 
