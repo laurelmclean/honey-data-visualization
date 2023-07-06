@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Honey Map</title>
+</head>
+<style>
+    html, body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .tooltip {
+        position: absolute;
+        pointer-events: none;
+        background: #485159bc;
+        color: #fff;
+        border-radius: 5px;
+        padding: 15px;
+        font-size: 14px;
+        box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .tooltip p {
+        margin: 0;
+    }
+
+    .tooltip b {
+        color: #f2e71d;
+    }
+</style>
+
+<body>
+    <h1>🍯 US Honey Production 🍯</h1>
+    <select id="year-select"></select>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+
+    <script>
+        // Define some variables for width and height
+        const width = 1500;
+        const height = 750;
+
+        // Define a projection
+        const projection = d3
+            .geoAlbersUsa()
+            .scale(1500)
+            .translate([width / 2, height / 2]);
+
+        const svg = d3
+            .select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const path = d3.geoPath().projection(projection);
+
+        const g = svg.append("g");
+
+        async function loadMap(year) {
+            // Load the honey data
+            const honeyData = await d3.csv("US_honey_dataset.csv");
+
+            // Get the available years from the data
+            const availableYears = [...new Set(honeyData.map((d) => d.year))];
+
+            // Populate the year select drop-down
+            const yearSelect = document.getElementById("year-select");
+            availableYears.forEach((y) => {
+                const option = document.createElement("option");
+                option.value = y;
+                option.text = y;
+                yearSelect.appendChild(option);
+            });
+
+            // Add event listener for year selection change
+            yearSelect.addEventListener("change", () => {
+                const selectedYear = yearSelect.value;
+                updateMap(selectedYear);
+            });
+
+            // Function to update the map based on the selected year
+            function updateMap(selectedYear) {
+                // Filter the honey data by selected year
+                const filteredData = honeyData.filter((d) => d.year === selectedYear);
+
+                // Load and display the GeoJSON
+                d3.json("gz_2010_us_040_00_20m.json").then((geojson) => {
+                    // Convert the GeoJSON to topojson format
+                    const topology = topojson.topology({ collection: geojson });
+
+                    // Extract the states from the topology
+                    const states = topojson.feature(
+                        topology,
+                        topology.objects.collection
+                    );
+
+                    const minProduction = d3.min(filteredData, (d) => +d.production);
+                    const maxProduction = d3.max(filteredData, (d) => +d.production);
+
+                    // Color scale
+                    const colorScale = d3
+                        .scaleLinear()
+                        .range(["yellow", "red"]) // Adjust the desired color range
+                        .domain([minProduction, maxProduction]);
+
+                    g.selectAll("path")
+                        .data(states.features)
+                        .join("path")
+                        .attr("d", path)
+                        .attr("fill", (d) => {
+                            const stateName = d.properties.NAME;
+                            const stateData = filteredData.find(
+                                (data) => data.state === stateName
+                            );
+                            if (stateData) {
+                                return colorScale(+stateData.production);
+                            } else {
+                                // Handle missing data
+                                return "gray";
+                            }
+                        })
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 0.25)
+                        .on("mouseover", showTooltip)
+                        .on("mouseout", hideTooltip);
+
+                    // Remove existing legend elements
+                    svg.selectAll(".legend").remove();
+
+                    // Define the legend dimensions
+                    const legendWidth = 200;
+                    const legendHeight = 20;
+
+                    // Create a legend SVG container
+                    const legend = svg
+                        .append("g")
+                        .attr("class", "legend")
+                        .attr(
+                            "transform",
+                            `translate(${width - legendWidth - 20},${height - legendHeight - 20
+                            })`
+                        );
+
+                    // Add a label for the total production
+                    legend
+                        .append("text")
+                        .attr("x", legendWidth / 2)
+                        .attr("y", -10)
+                        .attr("text-anchor", "middle")
+                        .text("Total 🍯 production (lbs)");
+
+                    // Create a linear gradient for the legend
+                    const gradient = legend
+                        .append("defs")
+                        .append("linearGradient")
+                        .attr("id", "color-gradient")
+                        .attr("x1", "0%")
+                        .attr("x2", "100%")
+                        .attr("y1", "0%")
+                        .attr("y2", "0%");
+
+                    // Define the color stops for the gradient
+                    const colorStops = d3.range(0, 1.01, 0.01);
+
+                    // Add color stops to the gradient
+                    gradient
+                        .selectAll("stop")
+                        .data(colorStops)
+                        .enter()
+                        .append("stop")
+                        .attr("offset", (d) => `${d * 100}%`)
+                        .attr("stop-color", (d) =>
+                            colorScale(d * (maxProduction - minProduction) + minProduction)
+                        );
+
+                    // Create a rectangle for the color gradient
+                    legend
+                        .append("rect")
+                        .attr("width", legendWidth)
+                        .attr("height", legendHeight)
+                        .style("fill", "url(#color-gradient)");
+
+                    // Add text for the minimum value
+                    legend
+                        .append("text")
+                        .attr("x", 0)
+                        .attr("y", legendHeight + 20)
+                        .text(minProduction);
+
+                    // Add text for the maximum value
+                    legend
+                        .append("text")
+                        .attr("x", legendWidth)
+                        .attr("y", legendHeight + 20)
+                        .attr("text-anchor", "end")
+                        .text(maxProduction);
+
+                    // Define the tooltip
+                    const tooltip = d3
+                        .select("body")
+                        .append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
+
+                    function showTooltip(event, d) {
+                        const stateName = d.properties.NAME;
+                        const stateData = filteredData.find(
+                            (data) => data.state === stateName
+                        );
+                        if (stateData) {
+                            tooltip
+                                .style("opacity", 1)
+                                .style("left", event.pageX + 10 + "px")
+                                .style("top", event.pageY + 10 + "px").html(`
+                                <b>State:</b> ${stateName}<br>
+                                <b>Colonies:</b> ${stateData.colonies_number}<br>
+                                <b>Yield per Colony:</b> ${stateData.yield_per_colony} lbs<br>
+                                <b>Production:</b> ${stateData.production} lbs<br>
+                                <b>Dollar Value:</b> $${stateData.value_of_production}<br>
+                            `);
+                        } else {
+                            tooltip
+                                .style("opacity", 1)
+                                .style("left", event.pageX + 10 + "px")
+                                .style("top", event.pageY + 10 + "px").html(`
+                                <b>State:</b> ${stateName}<br>
+                                <b>No data available<br>
+                            `);
+                        }
+                    }
+                    function hideTooltip() {
+                        tooltip.style("opacity", 0);
+                    }
+                });
+            }
+
+            // Call updateMap with the initial selected year
+            updateMap(year);
+        }
+
+        loadMap("1995");
+    </script>
+</body>
+
+</html>
