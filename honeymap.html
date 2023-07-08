@@ -39,6 +39,7 @@
 
 <body>
     <h1>🍯 US Honey Production 🍯</h1>
+    <label>Select Year:</label>
     <select id="year-select"></select>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson@3"></script>
@@ -70,7 +71,7 @@
             const honeyData = await d3.csv("US_honey_dataset.csv");
 
             // Get the available years from the data
-            const availableYears = [...new Set(honeyData.map((d) => d.year))];
+            const availableYears = [...new Set(honeyData.map((d) => d.year).reverse())];
 
             // Populate the year select drop-down
             const yearSelect = document.getElementById("year-select");
@@ -193,16 +194,16 @@
                     legend
                         .append("text")
                         .attr("x", 0)
-                        .attr("y", legendHeight + 20)
-                        .text(minProduction);
+                        .attr("y", legendHeight + 15)
+                        .text(minProduction.toLocaleString());
 
                     // Add text for the maximum value
                     legend
                         .append("text")
                         .attr("x", legendWidth)
-                        .attr("y", legendHeight + 20)
+                        .attr("y", legendHeight + 15)
                         .attr("text-anchor", "end")
-                        .text(maxProduction);
+                        .text(maxProduction.toLocaleString());
 
                     // Define the tooltip
                     const tooltip = d3
@@ -224,8 +225,10 @@
                                 <b>State:</b> ${stateName}<br>
                                 <b>Colonies:</b> ${stateData.colonies_number}<br>
                                 <b>Yield per Colony:</b> ${stateData.yield_per_colony} lbs<br>
-                                <b>Production:</b> ${stateData.production} lbs<br>
-                                <b>Dollar Value:</b> $${stateData.value_of_production}<br>
+                                <b>Total Production:</b> ${stateData.production} lbs<br>
+                                <b>Average Price:</b> $${stateData.average_price} per lb<br>
+                                <b>Total Value of Production:</b> $${stateData.value_of_production}<br>
+                                <b>Average Value per Colony:</b> $${(stateData.value_of_production/stateData.colonies_number).toFixed(2)}<br>
                             `);
                         } else {
                             tooltip
@@ -247,7 +250,7 @@
             updateMap(year);
         }
 
-        loadMap("1995");
+        loadMap("2021");
     </script>
 </body>
 
