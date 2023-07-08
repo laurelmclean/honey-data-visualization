@@ -34,3 +34,5 @@ To explore the honey production visualization, follow these steps:
 1. Clone the repository to your local machine.
 2. Open the project files in your preferred web browser.
 3. Interact with the visualization by selecting a year to view honey production statistics per state.
+
+[Data Source](https://www.kaggle.com/datasets/mohitpoudel/us-honey-production-19952021?resource=download)
