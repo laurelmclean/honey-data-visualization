@@ -3,6 +3,7 @@
 This project showcases a data visualization that presents the honey production, demand, and supply across different states of America from 1995 - 2021. The visualization allows users to select a year and view statistics per state on a map, providing valuable insights into honey production trends and patterns.
 
 ![US Honey Production Visualization Map](map.png)
+![US Honey Production Visualization Map Tool Tip](tooltip.png)
 
 ## Questions Answered by the Visualization
 
